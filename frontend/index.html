@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="light-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Library System</h2>
+                <div class="sidebar-actions">
+                    <button id="sidebar-toggle" class="btn-icon" title="Toggle Sidebar">☰</button>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="books-tab">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Quản lý Sách</span>
+                </li>
+                <li data-tab="readers-tab">
+                    <span class="nav-icon">🧑‍🎓</span>
+                    <span class="nav-text">Quản lý Độc giả</span>
+                </li>
+                <li data-tab="borrow-tab">
+                    <span class="nav-icon">📤</span>
+                    <span class="nav-text">Mượn Sách</span>
+                </li>
+                <li data-tab="return-tab">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-text">Trả Sách</span>
+                </li>
+                <li data-tab="settings-tab">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Cài đặt</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Toast Notifications -->
+            <div id="toast-container" class="toast-container"></div>
+
+            <!-- Tab: Books -->
+            <section id="books-tab" class="tab-content active">
+                <div class="header-action">
+                    <h1>Quản lý Sách</h1>
+                    <button class="btn btn-primary" onclick="showModal('add-book-modal')">+ Thêm Sách</button>
+                </div>
+                <div class="card-fluent">
+                    <table class="fluent-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Sách</th>
+                                <th>Tên Sách</th>
+                                <th>Tác Giả</th>
+                                <th>Sẵn có</th>
+                                <th>Vị trí</th>
+                                <th>Tổng</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="books-tbody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                    <div id="books-pagination" class="pagination-container"></div>
+                </div>
+            </section>
+
+            <!-- Tab: Readers -->
+            <section id="readers-tab" class="tab-content">
+                <div class="header-action">
+                    <h1>Quản lý Độc giả</h1>
+                    <button class="btn btn-primary" onclick="showModal('add-reader-modal')">+ Cấp Thẻ Mới</button>
+                </div>
+                <div class="card-fluent">
+                    <table class="fluent-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Độc giả</th>
+                                <th>Họ Tên</th>
+                                <th>Lớp</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="readers-tbody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                    <div id="readers-pagination" class="pagination-container"></div>
+                </div>
+            </section>
+
+            <!-- Tab: Borrow -->
+            <section id="borrow-tab" class="tab-content">
+                <div class="header-action">
+                    <h1>Mượn Sách</h1>
+                </div>
+                <div class="grid-2-col">
+                    <div class="card-fluent">
+                        <h3>Lập phiếu mượn</h3>
+                        <div class="form-group">
+                            <label>Mã Độc giả</label>
+                            <input type="text" id="borrow-reader-id" class="fluent-input" placeholder="Nhập mã độc giả">
+                            <div id="borrow-reader-info" class="info-display" style="margin-top: 5px; font-size: 0.9em; color: var(--primary-color);"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mã Sách</label>
+                            <input type="text" id="borrow-book-id" class="fluent-input" placeholder="Nhập mã sách">
+                            <div id="borrow-book-info" class="info-display" style="margin-top: 5px; font-size: 0.9em; color: var(--primary-color);"></div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="borrowBook()">Mượn Sách</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-fluent">
+                        <h3>Danh sách chờ (Hàng đợi)</h3>
+                        <table class="fluent-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Độc giả</th>
+                                    <th>Mã Sách chờ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queue-tbody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Return -->
+            <section id="return-tab" class="tab-content">
+                <div class="header-action">
+                    <h1>Trả Sách</h1>
+                </div>
+                <div class="card-fluent" style="max-width: 500px;">
+                    <h3>Lập phiếu trả</h3>
+                    <div class="form-group">
+                        <label>Mã Độc giả</label>
+                        <input type="text" id="return-reader-id" class="fluent-input" placeholder="Nhập mã độc giả">
+                        <div id="return-reader-info" class="info-display" style="margin-top: 5px; font-size: 0.9em; color: var(--primary-color);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mã Sách</label>
+                        <input type="text" id="return-book-id" class="fluent-input" placeholder="Nhập mã sách">
+                        <div id="return-book-info" class="info-display" style="margin-top: 5px; font-size: 0.9em; color: var(--primary-color);"></div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="returnBook()">Trả Sách</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Settings -->
+            <section id="settings-tab" class="tab-content">
+                <div class="header-action">
+                    <h1>Cài đặt Hệ thống</h1>
+                </div>
+                <div class="grid-2-col">
+                    <div class="card-fluent">
+                        <h3>Giao diện (Theme)</h3>
+                        <p style="margin-bottom: 15px;">Chuyển đổi giao diện sáng/tối để phù hợp với môi trường làm việc.</p>
+                        <button id="theme-toggle-btn" class="btn btn-primary">🌓 Đổi giao diện Sáng/Tối</button>
+                    </div>
+                    <div class="card-fluent">
+                        <h3>Nhập dữ liệu (Tải file)</h3>
+                        <p style="margin-bottom: 15px;">Tải dữ liệu danh mục sách hoặc độc giả bằng file .txt (định dạng CSV).</p>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="file" id="upload-books-file" accept=".txt" style="display: none;" onchange="uploadBooks(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('upload-books-file').click()">📚 Tải file books.txt</button>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="file" id="upload-readers-file" accept=".txt" style="display: none;" onchange="uploadReaders(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('upload-readers-file').click()">🧑‍🎓 Tải file readers.txt</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="add-book-modal" class="modal">
+        <div class="modal-content card-fluent">
+            <span class="close" onclick="closeModal('add-book-modal')">&times;</span>
+            <h2>Thêm Sách Mới</h2>
+            <div class="form-group">
+                <label>Mã Sách</label>
+                <input type="text" id="new-book-id" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Tên Sách</label>
+                <input type="text" id="new-book-title" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Tác Giả</label>
+                <input type="text" id="new-book-author" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Số Lượng</label>
+                <input type="number" id="new-book-quantity" class="fluent-input">
+            </div>
+            <button class="btn btn-primary" onclick="addBook()">Xác nhận</button>
+        </div>
+    </div>
+
+    <div id="edit-book-modal" class="modal">
+        <div class="modal-content card-fluent">
+            <span class="close" onclick="closeModal('edit-book-modal')">&times;</span>
+            <h2>Hiệu Chỉnh Thông Tin Sách</h2>
+            <input type="hidden" id="edit-book-id">
+            <div class="form-group">
+                <label>Tên Sách</label>
+                <input type="text" id="edit-book-title" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Vị trí lưu trữ</label>
+                <input type="text" id="edit-book-location" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Tổng Số Lượng (bao gồm sách đang mượn)</label>
+                <input type="number" id="edit-book-quantity" class="fluent-input">
+            </div>
+            <button class="btn btn-primary" onclick="updateBook()">Lưu Thay Đổi</button>
+        </div>
+    </div>
+
+    <div id="add-reader-modal" class="modal">
+        <div class="modal-content card-fluent">
+            <span class="close" onclick="closeModal('add-reader-modal')">&times;</span>
+            <h2>Cấp Thẻ Độc Giả</h2>
+            <div class="form-group">
+                <label>Mã Độc giả</label>
+                <input type="text" id="new-reader-id" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Họ Tên</label>
+                <input type="text" id="new-reader-name" class="fluent-input">
+            </div>
+            <div class="form-group">
+                <label>Lớp</label>
+                <input type="text" id="new-reader-class" class="fluent-input">
+            </div>
+            <button class="btn btn-primary" onclick="addReader()">Xác nhận</button>
+        </div>
+    </div>
+
+    <script src="app.js?v=3"></script>
+</body>
+</html>
