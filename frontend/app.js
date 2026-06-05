@@ -288,6 +288,19 @@ async function uploadBooks(event) {
     event.target.value = ''; // reset
 }
 
+async function resetDatabase() {
+    if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu sách và độc giả? Hành động này không thể hoàn tác!")) {
+        return;
+    }
+    try {
+        const res = await fetchJSON(`${API_URL}/reset`, { method: 'POST' });
+        showToast(res.message);
+        loadBooks();
+        loadReaders();
+        loadQueue();
+    } catch(e) {}
+}
+
 // Borrow/Return Logic
 async function borrowBook() {
     const reader_id = document.getElementById('borrow-reader-id').value;

@@ -180,6 +180,16 @@ def return_book(req: ReturnRequest):
 def get_queue():
     return manager.get_wait_queue_list()
 
+@app.post("/api/reset")
+def reset_database():
+    global manager
+    manager = LibraryManager()
+    with open(BOOKS_FILE, "w", encoding="utf-8") as f:
+        pass
+    with open(READERS_FILE, "w", encoding="utf-8") as f:
+        pass
+    return {"message": "Cơ sở dữ liệu đã được làm rỗng thành công."}
+
 # Mount frontend
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
