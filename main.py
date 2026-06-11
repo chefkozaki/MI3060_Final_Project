@@ -27,8 +27,7 @@ if not os.path.exists(READERS_FILE):
         f.write("R002,Phạm Thị D,IT2\n")
 
 db_context = FileDatabaseContext(BOOKS_FILE, READERS_FILE)
-db_context.load_books(manager)
-db_context.load_readers(manager)
+db_context.load_data(manager)
 
 class BookCreate(BaseModel):
     book_id: str
@@ -65,6 +64,32 @@ def get_book(book_id: str):
         raise HTTPException(status_code=404, detail="Sách không tồn tại")
     return {"title": book.title, "stock": book.stock}
 
+@app.get("/api/books/search/{book_id}")
+def search_book_full(book_id: str):
+    book = manager.book_tree.search(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Sách không tồn tại")
+    
+    borrowed_by = []
+    readers = manager.reader_tree.in_order()
+    for r in readers:
+        current = r.history_list.head
+        while current:
+            if current.data.status == "Borrowed" and current.data.book_id == book_id:
+                borrowed_by.append(r.reader_id)
+            current = current.next
+
+    return {
+        "book_id": book.book_id,
+        "title": book.title,
+        "author": book.author,
+        "stock": book.stock,
+        "total_quantity": book.total_quantity,
+        "location": getattr(book, 'location', 'Chưa xác định'),
+        "borrowed_by": borrowed_by
+    }
+
+
 @app.post("/api/upload/books")
 async def upload_books(file: UploadFile = File(...)):
     contents = await file.read()
@@ -82,6 +107,7 @@ async def upload_books(file: UploadFile = File(...)):
             title = ','.join(parts[1:-2])
             manager.add_book(book_id, title, author, quantity)
             count += 1
+    db_context.save_data(manager)
     return {"message": f"Đã nạp {count} cuốn sách từ file."}
 
 @app.post("/api/books")
@@ -89,6 +115,7 @@ def add_book(book: BookCreate):
     success, msg = manager.add_book(book.book_id, book.title, book.author, book.quantity)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.put("/api/books/{book_id}")
@@ -96,6 +123,7 @@ def update_book(book_id: str, book: BookUpdate):
     success, msg = manager.update_book(book_id, title=book.title, quantity=book.quantity, location=book.location)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.delete("/api/books/{book_id}")
@@ -103,11 +131,20 @@ def delete_book(book_id: str):
     success, msg = manager.delete_book(book_id)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.get("/api/readers")
 def get_readers():
     return manager.get_all_readers()
+
+@app.get("/api/readers/search/{reader_id}")
+def search_reader_full(reader_id: str):
+    reader = manager.reader_tree.search(reader_id)
+    if not reader:
+        raise HTTPException(status_code=404, detail="Độc giả không tồn tại")
+    return {"reader_id": reader.reader_id, "name": reader.name, "class_name": reader.class_name, "status": reader.status}
+
 
 @app.get("/api/readers/{reader_id}/info")
 def get_reader_info(reader_id: str):
@@ -144,6 +181,7 @@ async def upload_readers(file: UploadFile = File(...)):
         if len(parts) >= 3:
             manager.add_reader(parts[0], parts[1], parts[2])
             count += 1
+    db_context.save_data(manager)
     return {"message": f"Đã nạp {count} độc giả từ file."}
 
 @app.post("/api/readers")
@@ -151,6 +189,7 @@ def add_reader(reader: ReaderCreate):
     success, msg = manager.add_reader(reader.reader_id, reader.name, reader.class_name)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.post("/api/readers/{reader_id}/lock")
@@ -158,6 +197,7 @@ def lock_reader(reader_id: str):
     success, msg = manager.lock_reader(reader_id)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.post("/api/borrow")
@@ -166,6 +206,7 @@ def borrow_book(req: BorrowRequest):
     success, msg = manager.handle_borrow_book(req.book_id, req.reader_id, date_str)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.post("/api/return")
@@ -174,6 +215,7 @@ def return_book(req: ReturnRequest):
     success, msg = manager.handle_return_book(req.book_id, req.reader_id, date_str)
     if not success:
         raise HTTPException(status_code=400, detail=msg)
+    db_context.save_data(manager)
     return {"message": msg}
 
 @app.get("/api/queue")
@@ -184,10 +226,7 @@ def get_queue():
 def reset_database():
     global manager
     manager = LibraryManager()
-    with open(BOOKS_FILE, "w", encoding="utf-8") as f:
-        pass
-    with open(READERS_FILE, "w", encoding="utf-8") as f:
-        pass
+    db_context.save_data(manager)
     return {"message": "Cơ sở dữ liệu đã được làm rỗng thành công."}
 
 # Mount frontend

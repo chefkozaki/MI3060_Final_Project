@@ -96,6 +96,25 @@ async function loadBooks() {
     } catch(e) {}
 }
 
+async function searchBook() {
+    const val = document.getElementById('search-book-id').value.trim();
+    if (!val) {
+        loadBooks();
+        return;
+    }
+    try {
+        const res = await fetchJSON(`${API_URL}/books/search/${val}`);
+        allBooks = [res];
+        renderBooksPage(1);
+    } catch(e) {
+        allBooks = [];
+        renderBooksPage(1);
+    }
+}
+window.searchBook = searchBook;
+
+
+
 window.renderBooksPage = function(page) {
     booksCurrentPage = page;
     const start = (page - 1) * ITEMS_PER_PAGE;
@@ -105,13 +124,14 @@ window.renderBooksPage = function(page) {
     const tbody = document.getElementById('books-tbody');
     let html = '';
     pageBooks.forEach(b => {
+        const borrowedByText = b.borrowed_by && b.borrowed_by.length > 0 ? b.borrowed_by.join(', ') : 'Không có';
         html += `
             <tr>
                 <td>${b.book_id}</td>
                 <td>${b.title}</td>
                 <td>${b.author}</td>
                 <td>${b.stock}</td>
-                <td>${b.location || 'Chưa xác định'}</td>
+                <td>${borrowedByText}</td>
                 <td>${b.total_quantity}</td>
                 <td>
                     <button class="btn btn-secondary btn-sm" onclick="openEditBookModal('${b.book_id}', '${b.title.replace(/'/g, "\\'")}', '${b.total_quantity}', '${b.location || 'Chưa xác định'}')">Sửa</button>
@@ -192,6 +212,25 @@ async function loadReaders() {
         renderReadersPage(1);
     } catch(e) {}
 }
+
+async function searchReader() {
+    const val = document.getElementById('search-reader-id').value.trim();
+    if (!val) {
+        loadReaders();
+        return;
+    }
+    try {
+        const res = await fetchJSON(`${API_URL}/readers/search/${val}`);
+        allReaders = [res];
+        renderReadersPage(1);
+    } catch(e) {
+        allReaders = [];
+        renderReadersPage(1);
+    }
+}
+window.searchReader = searchReader;
+
+
 
 window.renderReadersPage = function(page) {
     readersCurrentPage = page;
@@ -313,7 +352,6 @@ async function borrowBook() {
         });
         showToast(res.message);
         loadQueue();
-        document.getElementById('borrow-book-id').value = '';
     } catch(e) {}
 }
 
@@ -328,7 +366,6 @@ async function returnBook() {
         });
         showToast(res.message);
         loadQueue();
-        document.getElementById('return-book-id').value = '';
     } catch(e) {}
 }
 
