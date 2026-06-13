@@ -3,7 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
 import uvicorn
-from library_logic import LibraryManager, FileDatabaseContext
+from library_logic import LibraryManager
+from file_io import FileDatabaseContext
 from datetime import datetime
 
 app = FastAPI(title="Library Management System API")
